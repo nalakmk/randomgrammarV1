@@ -4351,39 +4351,62 @@
         type();
     }
 
-   function initSession() {
+   // 1. [중요] 필요한 변수들을 상단에 꼭 선언해 주세요.
+let totalQuestionsInSession = 0;
+let currentIdx = 0;
+let userName = "";
+let userGrade = "";
+let sessionProblems = [];
+
+/**
+ * 2. 챌린지 시작 함수 (문제 수정본)
+ */
+function initSession() {
+    // HTML에서 입력값들을 가져옵니다.
     userName = document.getElementById('user-name').value;
     userGrade = document.getElementById('user-grade').value;
     const selectedLevel = document.getElementById('user-level').value;
     
-    // 1. 원장님이 만드신 입력창에서 시작/끝 번호를 가져옵니다.
-    const startNum = parseInt(document.getElementById('start-num').value);
-    const endNum = parseInt(document.getElementById('end-num').value);
+    // 시작 번호와 끝 번호 가져오기
+    const startInput = document.getElementById('start-num');
+    const endInput = document.getElementById('end-num');
 
-    // 이름과 번호가 정확히 입력되었는지 확인합니다.
-    if (!userName || isNaN(startNum) || isNaN(endNum)) {
-        return alert("이름과 풀고 싶은 문제 범위를 숫자로 정확히 입력해 주세요!");
-    }
-
-    // 2. 전체 문제(600개) 중에서 선택한 레벨(Basic/Advanced)만 골라냅니다.
-    const filtered = problemPool.filter(p => p.level === selectedLevel);
-
-    // 3. [핵심] 입력한 범위만큼 순서대로 자릅니다. (시작번호는 -1을 해줘야 컴퓨터가 이해합니다.)
-    sessionProblems = filtered.slice(startNum - 1, endNum);
-
-    if (sessionProblems.length === 0) {
-        alert("해당 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
+    // 입력창이 있는지 먼저 확인 (에러 방지용)
+    if (!startInput || !endInput) {
+        console.error("입력창 ID(start-num, end-num)를 찾을 수 없습니다.");
         return;
     }
 
-    // 4. 이제 10개 고정이 아니라, 선택한 문제 수만큼 전체 문항 수가 설정됩니다.
-    totalQuestionsInSession = sessionProblems.length; 
-    currentProblemIndex = 0;
+    const startNum = parseInt(startInput.value);
+    const endNum = parseInt(endInput.value);
 
-    // 화면 전환
+    // 빈칸이 있는지 확인합니다.
+    if (!userName || isNaN(startNum) || isNaN(endNum)) {
+        alert("이름과 풀고 싶은 문제 범위를 숫자로 입력해 주세요!");
+        return;
+    }
+
+    // 1단계: 선택한 레벨(Basic/Advanced)만 골라내기
+    const filtered = problemPool.filter(p => p.level === selectedLevel);
+
+    // 2단계: 입력한 범위만큼 순서대로 자르기
+    sessionProblems = filtered.slice(startNum - 1, endNum);
+
+    // 문제가 하나도 없을 때 경고
+    if (sessionProblems.length === 0) {
+        alert("선택하신 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
+        return;
+    }
+
+    // 3단계: 전체 문제 수 설정 및 인덱스 초기화
+    totalQuestionsInSession = sessionProblems.length;
+    currentIdx = 0;
+
+    // 4단계: 화면 전환
     document.getElementById('start-screen').classList.remove('active');
     document.getElementById('app-screen').classList.add('active');
     
+    // 첫 번째 문제 불러오기
     loadProblem();
 }
 
@@ -4469,6 +4492,7 @@ loadProblem();
 </body>
 
 </html>
+
 
 
 
