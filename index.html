@@ -4340,7 +4340,7 @@
 ];
 ------------------------------------------------------------------------- */
     
-    // 1. 필요한 전역 변수 선언 (프로그램 전체에서 사용하는 바구니들)
+    // 1. 필요한 변수 선언 (중복 선언 방지를 위해 여기서 한 번만 선언합니다)
     let userName = "";
     let userGrade = "";
     let sessionProblems = [];
@@ -4349,7 +4349,7 @@
     let score = { Pass: 0, Help: 0 };
 
     /**
-     * 2. 챌린지 시작 함수: 범위 지정 및 순서대로 추출
+     * 2. 챌린지 시작 함수
      */
     function initSession() {
         userName = document.getElementById('user-name').value;
@@ -4359,25 +4359,25 @@
         const startVal = document.getElementById('start-num').value;
         const endVal = document.getElementById('end-num').value;
 
-        // 필수 입력값 체크
+        // 필수 입력값 확인
         if (!userName || !startVal || !endVal) {
-            return alert("이름과 풀고 싶은 문제 범위를 모두 입력해 주세요!");
+            return alert("이름과 문제 범위를 모두 입력해 주세요!");
         }
 
         const startNum = parseInt(startVal);
         const endNum = parseInt(endVal);
 
-        // 선택한 난이도(Basic/Advanced)만 필터링
+        // 선택한 난이도만 필터링
         const filtered = problemPool.filter(p => p.level === selectedLevel);
 
-        // [중요] 정해진 범위만큼 순서대로 자르기
+        // [핵심] 정해진 범위만큼 순서대로 자르기
         sessionProblems = filtered.slice(startNum - 1, endNum);
 
         if (sessionProblems.length === 0) {
             return alert("해당 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
         }
 
-        // 초기 세팅
+        // 초기 세팅 완료
         totalQuestionsInSession = sessionProblems.length;
         currentIdx = 0;
         score = { Pass: 0, Help: 0 };
@@ -4395,15 +4395,15 @@
     function loadProblem() {
         const p = sessionProblems[currentIdx];
         
-        // 진행바 계산
+        // 진행바 계산: $(\frac{currentIdx}{totalQuestionsInSession} \times 100)$
         const progressPercent = (currentIdx / totalQuestionsInSession) * 100;
         document.getElementById('progress-bar').style.width = progressPercent + "%";
         
-        // 상단 배지 업데이트
+        // 상단 숫자 배지 업데이트
         const typeTxt = p.type === 'blank' ? '빈칸 채우기' : '오류 수정';
         document.getElementById('badge').innerText = `문제 ${currentIdx + 1}/${totalQuestionsInSession} | ${typeTxt}`;
 
-        // 문제 타이핑 효과
+        // 문제 텍스트 출력
         typeWriter("Q. " + p.q, "q-area");
     }
 
@@ -4435,17 +4435,17 @@
         document.getElementById('modal-q-display').innerText = "Q. " + sessionProblems[currentIdx].q;
         document.getElementById('view-st').innerText = studentAns;
         
-        // 모범 답안 출력
+        // 모범 답안 타이핑 출력
         typeWriter(sessionProblems[currentIdx].expl, "view-model", 15);
     }
 
     /**
-     * 6. 문제 닫기 및 다음 문제로 이동
+     * 6. 문제 닫기 및 다음 이동
      */
     function closeAndNext(status) {
         score[status]++;
         
-        // 구글 시트로 데이터 전송
+        // 데이터 전송
         sendToGas(status);
 
         document.getElementById('modal').style.display = 'none';
@@ -4455,12 +4455,12 @@
             currentIdx++;
             loadProblem();
         } else {
-            showResult(); // 모든 문제를 풀었을 때
+            showResult(); // 종료 화면으로
         }
     }
 
     /**
-     * 7. 구글 시트 전송 함수
+     * 7. 구글 시트 데이터 전송
      */
     function sendToGas(status) {
         const p = sessionProblems[currentIdx];
@@ -4481,7 +4481,7 @@
     }
 
     /**
-     * 8. 결과 화면 표시
+     * 8. 결과 표시
      */
     function showResult() {
         document.getElementById('app-screen').classList.remove('active');
@@ -4493,13 +4493,14 @@
     }
 
     /**
-     * 9. 최종 제출 및 새로고침
+     * 9. 최종 제출
      */
     function finalSubmit() {
-        alert("모든 결과가 저장되었습니다. 수고하셨습니다!");
+        alert("모든 데이터가 성공적으로 저장되었습니다.");
         location.reload();
     }
 </script>
 </body>
 </html>
+
 
