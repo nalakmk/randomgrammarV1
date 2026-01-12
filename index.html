@@ -4344,7 +4344,7 @@
   }
 ];
 
-    /* 3. 시스템 로직 구역 (함수들) */
+   /* [3. 시스템 로직 구역] */
     function initSession() {
         userName = document.getElementById('user-name').value;
         userGrade = document.getElementById('user-grade').value;
@@ -4361,7 +4361,7 @@
         const endNum = parseInt(endVal);
         const filtered = problemPool.filter(p => p.level === selectedLevel);
         
-        // 범위 자르기
+        // 입력한 범위만큼 순서대로 자릅니다.
         sessionProblems = filtered.slice(startNum - 1, endNum);
 
         if (sessionProblems.length === 0) {
@@ -4382,7 +4382,7 @@
         if (!sessionProblems[currentIdx]) return;
         const p = sessionProblems[currentIdx];
         
-        // 진행바 계산: $\text{progressPercent} = \left( \frac{\text{currentIdx}}{\text{totalQuestionsInSession}} \times 100 \right)$
+        // 진행바 계산 공식: $ \frac{currentIdx}{totalQuestionsInSession} \times 100 $
         const progressPercent = (currentIdx / totalQuestionsInSession) * 100;
         document.getElementById('progress-bar').style.width = progressPercent + "%";
         
@@ -4464,6 +4464,7 @@
 </script>
 </body>
 </html>
+
 
 
 
