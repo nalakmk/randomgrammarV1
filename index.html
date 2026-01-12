@@ -4335,6 +4335,13 @@
   }
 ];
 
+let userName = "";
+let userGrade = "";
+let sessionProblems = [];
+let currentIdx = 0;
+let totalQuestionsInSession = 0;
+let score = { Pass: 0, Help: 0 };
+
    /* [3. 시스템 로직 구역] */
     function initSession() {
         userName = document.getElementById('user-name').value;
@@ -4455,6 +4462,7 @@
 </script>
 </body>
 </html>
+
 
 
 
