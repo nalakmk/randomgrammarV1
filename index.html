@@ -109,7 +109,7 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxKjNHlYgZI_XnlP6I0JFA0NNZAnYP4SM_PTKeg1dWm_0r6tH1E7vGYsuEG_BbJ8PMv6w/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzlw9W8uddbmNJkpwDLlOSZXG5Dx6iZT-F4pRIhwiKX6LfQKJST1HqRAjqJguVrbcRRIg/exec"; 
 
     /* 2. 데이터 통합 구역 (여기에 600개 문제를 넣으세요) */
     const problemPool = [
@@ -4430,21 +4430,27 @@ let score = { Pass: 0, Help: 0 };
         }
     }
 
-    function sendToGas(status) {
-        const p = sessionProblems[currentIdx];
-        fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                name: userName,
-                grade: userGrade,
-                level: p.level,
-                question: p.q,
-                studentAns: document.getElementById('st-input').value,
-                modelAns: p.expl,
-                status: status
-            })
-        }).catch(err => console.error("전송 오류:", err));
-    }
+   function sendToGas(status) {
+    const p = sessionProblems[currentIdx];
+    
+    // 시작 번호와 현재 진행 순서를 더해 실제 문제 번호를 계산합니다.
+    const startNum = parseInt(document.getElementById('start-num').value) || 1;
+    const realProblemNo = startNum + currentIdx;
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            name: userName,
+            grade: userGrade,
+            level: p.level,
+            probNo: realProblemNo, // ★ 이 줄이 추가되었습니다!
+            question: p.q,
+            studentAns: document.getElementById('st-input').value,
+            modelAns: p.expl,
+            status: status
+        })
+    }).catch(err => console.error("전송 오류:", err));
+}
 
     function showResult() {
         document.getElementById('app-screen').classList.remove('active');
@@ -4462,6 +4468,7 @@ let score = { Pass: 0, Help: 0 };
 </script>
 </body>
 </html>
+
 
 
 
