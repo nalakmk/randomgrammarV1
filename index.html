@@ -109,13 +109,18 @@
 </div>
 
 <script>
-    /* [설정] 구글 앱스 스크립트 배포 주소를 아래에 넣으세요 */
+    <script>
+    /* 1. 설정 및 변수 선언 (딱 한 번만 선언합니다) */
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxKjNHlYgZI_XnlP6I0JFA0NNZAnYP4SM_PTKeg1dWm_0r6tH1E7vGYsuEG_BbJ8PMv6w/exec"; 
 
-    /* -------------------------------------------------------------------------
-       [데이터 통합 구역]
-       메모장에 합쳐둔 400개의 JSON 데이터를 아래 [] 사이에 붙여넣으세요.
-       ------------------------------------------------------------------------- */
+    let userName = "";
+    let userGrade = "";
+    let sessionProblems = [];
+    let currentIdx = 0;
+    let totalQuestionsInSession = 0;
+    let score = { Pass: 0, Help: 0 };
+
+    /* 2. 데이터 통합 구역 (여기에 600개 문제를 넣으세요) */
     const problemPool = [
   {
     "type": "blank",
@@ -4338,21 +4343,8 @@
     "expl": "[단서] 'I think'가 삽입된 관계대명사절입니다. [법칙] 삽입절을 제외하면 뒤에 동사 'will help'가 이어지므로 주어 역할을 하는 주격 관계대명사가 필요합니다. [결론] whom을 who로 고쳐야 합니다."
   }
 ];
-/* -------------------------------------------------------------------------
-       [시스템 로직 구역] - 여기서부터 끝까지 복사해서 붙여넣으세요.
-       ------------------------------------------------------------------------- */
-    
-    // 1. 필요한 변수 선언 (중복 선언 방지를 위해 여기서 한 번만 선언합니다)
-    let userName = "";
-    let userGrade = "";
-    let sessionProblems = [];
-    let currentIdx = 0;
-    let totalQuestionsInSession = 0;
-    let score = { Pass: 0, Help: 0 };
 
-    /**
-     * 2. 챌린지 시작 함수
-     */
+    /* 3. 시스템 로직 구역 (함수들) */
     function initSession() {
         userName = document.getElementById('user-name').value;
         userGrade = document.getElementById('user-grade').value;
@@ -4361,57 +4353,45 @@
         const startVal = document.getElementById('start-num').value;
         const endVal = document.getElementById('end-num').value;
 
-        // 필수 입력값 확인
         if (!userName || !startVal || !endVal) {
             return alert("이름과 문제 범위를 모두 입력해 주세요!");
         }
 
         const startNum = parseInt(startVal);
         const endNum = parseInt(endVal);
-
-        // 선택한 난이도만 필터링
         const filtered = problemPool.filter(p => p.level === selectedLevel);
-
-        // [핵심] 정해진 범위만큼 순서대로 자르기
+        
+        // 범위 자르기
         sessionProblems = filtered.slice(startNum - 1, endNum);
 
         if (sessionProblems.length === 0) {
             return alert("해당 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
         }
 
-        // 초기 세팅 완료
         totalQuestionsInSession = sessionProblems.length;
         currentIdx = 0;
         score = { Pass: 0, Help: 0 };
 
-        // 화면 전환
         document.getElementById('start-screen').classList.remove('active');
         document.getElementById('app-screen').classList.add('active');
         
         loadProblem();
     }
 
-    /**
-     * 3. 문제 화면 로드 함수
-     */
     function loadProblem() {
+        if (!sessionProblems[currentIdx]) return;
         const p = sessionProblems[currentIdx];
         
-        // 진행바 계산: $(\frac{currentIdx}{totalQuestionsInSession} \times 100)$
+        // 진행바 계산: $\text{progressPercent} = \left( \frac{\text{currentIdx}}{\text{totalQuestionsInSession}} \times 100 \right)$
         const progressPercent = (currentIdx / totalQuestionsInSession) * 100;
         document.getElementById('progress-bar').style.width = progressPercent + "%";
         
-        // 상단 숫자 배지 업데이트
         const typeTxt = p.type === 'blank' ? '빈칸 채우기' : '오류 수정';
         document.getElementById('badge').innerText = `문제 ${currentIdx + 1}/${totalQuestionsInSession} | ${typeTxt}`;
 
-        // 문제 텍스트 출력
         typeWriter("Q. " + p.q, "q-area");
     }
 
-    /**
-     * 4. 타이핑 효과 함수
-     */
     function typeWriter(text, elementId, speed = 30) {
         const element = document.getElementById(elementId);
         element.innerHTML = "";
@@ -4426,9 +4406,6 @@
         type();
     }
 
-    /**
-     * 5. 모달 열기 및 대조
-     */
     function openComparison() {
         const studentAns = document.getElementById('st-input').value.trim();
         if (!studentAns) return alert("정답의 근거를 작성해 주세요!");
@@ -4437,17 +4414,11 @@
         document.getElementById('modal-q-display').innerText = "Q. " + sessionProblems[currentIdx].q;
         document.getElementById('view-st').innerText = studentAns;
         
-        // 모범 답안 타이핑 출력
         typeWriter(sessionProblems[currentIdx].expl, "view-model", 15);
     }
 
-    /**
-     * 6. 문제 닫기 및 다음 이동
-     */
     function closeAndNext(status) {
         score[status]++;
-        
-        // 데이터 전송
         sendToGas(status);
 
         document.getElementById('modal').style.display = 'none';
@@ -4457,34 +4428,26 @@
             currentIdx++;
             loadProblem();
         } else {
-            showResult(); // 종료 화면으로
+            showResult();
         }
     }
 
-    /**
-     * 7. 구글 시트 데이터 전송
-     */
     function sendToGas(status) {
         const p = sessionProblems[currentIdx];
-        const payload = {
-            name: userName,
-            grade: userGrade,
-            level: p.level,
-            question: p.q,
-            studentAns: document.getElementById('st-input').value,
-            modelAns: p.expl,
-            status: status
-        };
-
         fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                name: userName,
+                grade: userGrade,
+                level: p.level,
+                question: p.q,
+                studentAns: document.getElementById('st-input').value,
+                modelAns: p.expl,
+                status: status
+            })
         }).catch(err => console.error("전송 오류:", err));
     }
 
-    /**
-     * 8. 결과 표시
-     */
     function showResult() {
         document.getElementById('app-screen').classList.remove('active');
         document.getElementById('result-screen').classList.add('active');
@@ -4494,9 +4457,6 @@
             `${userName} 학생, 총 ${totalQuestionsInSession}문제 중 ${score.Pass}문제를 통과했습니다!`;
     }
 
-    /**
-     * 9. 최종 제출
-     */
     function finalSubmit() {
         alert("모든 데이터가 성공적으로 저장되었습니다.");
         location.reload();
@@ -4504,6 +4464,7 @@
 </script>
 </body>
 </html>
+
 
 
 
