@@ -4338,163 +4338,168 @@
     "expl": "[단서] 'I think'가 삽입된 관계대명사절입니다. [법칙] 삽입절을 제외하면 뒤에 동사 'will help'가 이어지므로 주어 역할을 하는 주격 관계대명사가 필요합니다. [결론] whom을 who로 고쳐야 합니다."
   }
 ];
-
-    let sessionProblems = [];
-    let currentIdx = 0;
-    let score = { Pass: 0, Help: 0 };
+------------------------------------------------------------------------- */
+    
+    // 1. 필요한 전역 변수 선언 (프로그램 전체에서 사용하는 바구니들)
     let userName = "";
     let userGrade = "";
+    let sessionProblems = [];
+    let currentIdx = 0;
+    let totalQuestionsInSession = 0;
+    let score = { Pass: 0, Help: 0 };
 
-    function typeWriter(text, elementId, speed = 20) {
-        let i = 0; const el = document.getElementById(elementId); el.innerHTML = "";
-        function type() { if (i < text.length) { el.innerHTML += text.charAt(i); i++; setTimeout(type, speed); } }
+    /**
+     * 2. 챌린지 시작 함수: 범위 지정 및 순서대로 추출
+     */
+    function initSession() {
+        userName = document.getElementById('user-name').value;
+        userGrade = document.getElementById('user-grade').value;
+        const selectedLevel = document.getElementById('user-level').value;
+        
+        const startVal = document.getElementById('start-num').value;
+        const endVal = document.getElementById('end-num').value;
+
+        // 필수 입력값 체크
+        if (!userName || !startVal || !endVal) {
+            return alert("이름과 풀고 싶은 문제 범위를 모두 입력해 주세요!");
+        }
+
+        const startNum = parseInt(startVal);
+        const endNum = parseInt(endVal);
+
+        // 선택한 난이도(Basic/Advanced)만 필터링
+        const filtered = problemPool.filter(p => p.level === selectedLevel);
+
+        // [중요] 정해진 범위만큼 순서대로 자르기
+        sessionProblems = filtered.slice(startNum - 1, endNum);
+
+        if (sessionProblems.length === 0) {
+            return alert("해당 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
+        }
+
+        // 초기 세팅
+        totalQuestionsInSession = sessionProblems.length;
+        currentIdx = 0;
+        score = { Pass: 0, Help: 0 };
+
+        // 화면 전환
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active');
+        
+        loadProblem();
+    }
+
+    /**
+     * 3. 문제 화면 로드 함수
+     */
+    function loadProblem() {
+        const p = sessionProblems[currentIdx];
+        
+        // 진행바 계산
+        const progressPercent = (currentIdx / totalQuestionsInSession) * 100;
+        document.getElementById('progress-bar').style.width = progressPercent + "%";
+        
+        // 상단 배지 업데이트
+        const typeTxt = p.type === 'blank' ? '빈칸 채우기' : '오류 수정';
+        document.getElementById('badge').innerText = `문제 ${currentIdx + 1}/${totalQuestionsInSession} | ${typeTxt}`;
+
+        // 문제 타이핑 효과
+        typeWriter("Q. " + p.q, "q-area");
+    }
+
+    /**
+     * 4. 타이핑 효과 함수
+     */
+    function typeWriter(text, elementId, speed = 30) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = "";
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        }
         type();
     }
 
-   // 1. [중요] 필요한 변수들을 상단에 꼭 선언해 주세요.
-let totalQuestionsInSession = 0;
-let currentIdx = 0;
-let userName = "";
-let userGrade = "";
-let sessionProblems = [];
-
-/**
- * 2. 챌린지 시작 함수 (문제 수정본)
- */
-function initSession() {
-    // HTML에서 입력값들을 가져옵니다.
-    userName = document.getElementById('user-name').value;
-    userGrade = document.getElementById('user-grade').value;
-    const selectedLevel = document.getElementById('user-level').value;
-    
-    // 시작 번호와 끝 번호 가져오기
-    const startInput = document.getElementById('start-num');
-    const endInput = document.getElementById('end-num');
-
-    // 입력창이 있는지 먼저 확인 (에러 방지용)
-    if (!startInput || !endInput) {
-        console.error("입력창 ID(start-num, end-num)를 찾을 수 없습니다.");
-        return;
-    }
-
-    const startNum = parseInt(startInput.value);
-    const endNum = parseInt(endInput.value);
-
-    // 빈칸이 있는지 확인합니다.
-    if (!userName || isNaN(startNum) || isNaN(endNum)) {
-        alert("이름과 풀고 싶은 문제 범위를 숫자로 입력해 주세요!");
-        return;
-    }
-
-    // 1단계: 선택한 레벨(Basic/Advanced)만 골라내기
-    const filtered = problemPool.filter(p => p.level === selectedLevel);
-
-    // 2단계: 입력한 범위만큼 순서대로 자르기
-    sessionProblems = filtered.slice(startNum - 1, endNum);
-
-    // 문제가 하나도 없을 때 경고
-    if (sessionProblems.length === 0) {
-        alert("선택하신 범위에 문제가 없습니다. 번호를 다시 확인해 주세요.");
-        return;
-    }
-
-    // 3단계: 전체 문제 수 설정 및 인덱스 초기화
-    totalQuestionsInSession = sessionProblems.length;
-    currentIdx = 0;
-
-    // 4단계: 화면 전환
-    document.getElementById('start-screen').classList.remove('active');
-    document.getElementById('app-screen').classList.add('active');
-    
-    // 첫 번째 문제 불러오기
-    loadProblem();
-}
-
-        // 1. 입력한 시작 번호와 끝 번호를 가져옵니다.
-const startNum = parseInt(document.getElementById('start-num').value);
-const endNum = parseInt(document.getElementById('end-num').value);
-
-// 2. 입력한 범위만큼 순서대로 문제를 자릅니다.
-// (startNum-1을 하는 이유는 컴퓨터는 0부터 숫자를 세기 때문입니다)
-sessionProblems = filtered.slice(startNum - 1, endNum);
-
-// 3. 이번 세션의 전체 문제 수를 저장합니다.
-totalQuestionsInSession = sessionProblems.length;
-currentIdx = 0; // 첫 번째 문제부터 시작하도록 초기화
-
-// 4. 화면을 전환하고 문제를 불러옵니다.
-document.getElementById('start-screen').classList.remove('active');
-document.getElementById('app-screen').classList.add('active');
-loadProblem();
-    }
-
-   function loadProblem() {
-    // 1. 현재 풀고 있는 문제를 가져옵니다.
-    const p = sessionProblems[currentIdx];
-
-    // 2. [수정] 진행 표시줄(Progress Bar) 너비 계산: 10 대신 totalQuestionsInSession 사용
-    const progressPercent = (currentIdx / totalQuestionsInSession * 100);
-    document.getElementById('progress-bar').style.width = progressPercent + "%";
-
-    // 3. [수정] 상단 배지 텍스트: 문제 1/10 대신 문제 1/전체개수 로 표시
-    const questionType = p.type === 'blank' ? '빈칸 채우기' : '오류 수정';
-    document.getElementById('badge').innerText = `문제 ${currentIdx + 1}/${totalQuestionsInSession} | ${questionType}`;
-
-    // 4. 문제 텍스트 타이핑 효과
-    typeWriter("Q. " + p.q, "q-area");
-}
-
+    /**
+     * 5. 모달 열기 및 대조
+     */
     function openComparison() {
-        if(!document.getElementById('st-input').value.trim()) return alert("정답의 근거를 작성해 주세요!");
+        const studentAns = document.getElementById('st-input').value.trim();
+        if (!studentAns) return alert("정답의 근거를 작성해 주세요!");
+        
         document.getElementById('modal').style.display = 'flex';
         document.getElementById('modal-q-display').innerText = "Q. " + sessionProblems[currentIdx].q;
-        document.getElementById('view-st').innerText = document.getElementById('st-input').value;
+        document.getElementById('view-st').innerText = studentAns;
+        
+        // 모범 답안 출력
         typeWriter(sessionProblems[currentIdx].expl, "view-model", 15);
     }
 
+    /**
+     * 6. 문제 닫기 및 다음 문제로 이동
+     */
     function closeAndNext(status) {
         score[status]++;
-        const p = sessionProblems[currentIdx];
         
-        // 실시간 전송 (선택 사항)
-        if(GAS_URL !== "YOUR_GAS_URL_HERE") {
-            const payload = { 
-                name: userName, grade: userGrade, level: p.level, 
-                question: p.q, studentAns: document.getElementById('st-input').value, 
-                modelAns: p.expl, status: status 
-            };
-            fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload)}).catch(e => console.error(e));
-        }
+        // 구글 시트로 데이터 전송
+        sendToGas(status);
 
         document.getElementById('modal').style.display = 'none';
         document.getElementById('st-input').value = "";
-        currentIdx++;
-        if(currentIdx < 10) loadProblem(); else showResult();
+
+        if (currentIdx < totalQuestionsInSession - 1) {
+            currentIdx++;
+            loadProblem();
+        } else {
+            showResult(); // 모든 문제를 풀었을 때
+        }
     }
 
- function showFinalResult() {
-    document.getElementById('app-screen').classList.remove('active');
-    document.getElementById('result-screen').classList.add('active');
-    
-    // 점수 계산 공식: (맞은 개수 / 전체 문제 수) * 100
-    const finalScore = Math.round((score.Pass / totalQuestionsInSession) * 100);
-    
-    document.getElementById('final-score').innerText = `${finalScore}점`;
-    document.getElementById('result-stats').innerText = 
-        `총 ${totalQuestionsInSession}문제 중 ${score.Pass}문제를 통과했습니다!`;
-}
+    /**
+     * 7. 구글 시트 전송 함수
+     */
+    function sendToGas(status) {
+        const p = sessionProblems[currentIdx];
+        const payload = {
+            name: userName,
+            grade: userGrade,
+            level: p.level,
+            question: p.q,
+            studentAns: document.getElementById('st-input').value,
+            modelAns: p.expl,
+            status: status
+        };
 
+        fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("전송 오류:", err));
+    }
+
+    /**
+     * 8. 결과 화면 표시
+     */
+    function showResult() {
+        document.getElementById('app-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('pass-count').innerText = score.Pass;
+        document.getElementById('help-count').innerText = score.Help;
+        document.getElementById('result-msg').innerText = 
+            `${userName} 학생, 총 ${totalQuestionsInSession}문제 중 ${score.Pass}문제를 통과했습니다!`;
+    }
+
+    /**
+     * 9. 최종 제출 및 새로고침
+     */
     function finalSubmit() {
-        alert("모든 학습 데이터가 성공적으로 제출되었습니다. 다음 학습에서 만나요!");
+        alert("모든 결과가 저장되었습니다. 수고하셨습니다!");
         location.reload();
     }
 </script>
 </body>
-
 </html>
-
-
-
-
-
 
