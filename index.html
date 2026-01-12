@@ -109,7 +109,7 @@
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzlw9W8uddbmNJkpwDLlOSZXG5Dx6iZT-F4pRIhwiKX6LfQKJST1HqRAjqJguVrbcRRIg/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwRCckHAq1yAKSbE8eo4iNr6oXYi7etzIgx6ZPQiUFX3K1m1-6oNO6y-Hdv7iKG4mRQ-A/exec"; 
 
     /* 2. 데이터 통합 구역 (여기에 600개 문제를 넣으세요) */
     const problemPool = [
@@ -728,6 +728,13 @@
     "q": "This is the place ________ I first met my best friend.",
     "a": "where",
     "expl": "[단서] 선행사가 장소(the place)이고 뒤에 완벽한 절이 옵니다. [법칙] 장소를 나타내는 선행사를 수식하며 부사 역할을 하는 관계부사는 where입니다. [결론] where가 정답입니다."
+  },
+  {
+    "type": "error_find",
+    "level": "Basic",
+    "q": "Each of the students have to bring their own lunch for the field trip.",
+    "a": "have -> has",
+    "expl": "[단서] 문장의 주어가 'Each of the students'입니다. [법칙] 'Each of + 복수명사' 구문이 주어로 쓰일 때, 문장의 핵심 주어는 복수명사(students)가 아니라 'Each(각각)'입니다. Each는 항상 단수 취급하므로 동사 역시 단수형을 써야 합니다. [결론] 복수형 동사원형 형태인 have를 3인칭 단수형 동사인 has로 고쳐야 합니다."
   },
   {
     "type": "error_find",
@@ -4468,6 +4475,7 @@ let score = { Pass: 0, Help: 0 };
 </script>
 </body>
 </html>
+
 
 
 
